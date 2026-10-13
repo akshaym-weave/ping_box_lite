@@ -1,131 +1,86 @@
-# Flutter inbox coding exercise — 3–5 years of experience
+# Flutter inbox exercise — 3–5 years of experience
 
-This is a 90-minute practical round. Improve an existing app; you do not need to
-build a new app or introduce a state-management package. Setup time is excluded.
+Improve the supplied offline inbox. Work through Q1–Q3 in order and explain your changes.
+Complete the [README setup checklist](README.md#pre-interview-readiness-checklist)
+before the round. The starter's compile error is intentional; fix it during Q1.
 
-## The app
+There are **five coding issue groups**: four in Q1 and one in Q2.
+The three tests in Q3 are a separate task.
 
-The inbox has a search field, conversation rows, an unread-message total, and a
-conversation preview screen. It uses offline demo data with a short loading delay.
-The starter intentionally contains a compile error, parsing errors, a layout bug,
-and a selected-conversation read bug. It also does unnecessary work in the list.
-
-Start with the default 30 conversations. Work through Q1, Q2, and Q3 in order.
-
-| Task | Time | Required outcome |
+| Task | Time | Required work |
 | --- | ---: | --- |
-| Q1: Debug the inbox | 35 min | Working async load, parsing, layout, and selected read state |
-| Q2: Improve the list | 15 min | Lazy rows without repeated totals or sorting, using 500 conversations |
-| Q3: Add tests | 30 min | Two logic tests and one widget test |
-| Explain and review | 10 min | Explain changes and any unfinished work |
+| Q1 — Debug | 25 min | Four fixes: async loading, parsing, layout, selected read state |
+| Q2 — Improve | 10 min | One improvement: build rows lazily |
+| Q3 — Test | 20 min | Two logic tests and one widget test |
+| Review | 5 min | Explain changes and unfinished work |
 
-## Where to work
+**Total: 60 minutes. Setup time is excluded.**
 
-- `lib/main.dart`: layout, rows, search field, navigation, preview screen.
-- `lib/inbox_controller.dart`: loading, search, and unread state.
-- `lib/thread.dart`: conversation model and parsing.
-- `lib/repository.dart`: offline data source, already supplied.
-- `test/exercise_test.dart`: skipped placeholders to replace.
-- `PERFORMANCE.md`: short observations for Q2.
+## Q1 — Make the inbox work
 
-## Q1 — Fix loading, parsing, layout, and unread behavior
+Use the default **30 conversations**. Fix these four areas:
 
-Start with the analyzer error, then run the app and reproduce the remaining problems.
-Fix these four areas:
+1. **Loading:** resolve the analyzer error so repository data loads asynchronously.
+2. **Parsing:** accept integer or integer-string unread counts; use 0 for missing,
+   invalid, or negative values. Convert a null preview to an empty string.
+   Timestamp parsing is already supplied.
+3. **Layout:** keep search above a bounded, scrollable list without screen overflow.
+4. **Read state:** opening a conversation marks only that row read, opens its preview,
+   and updates the header. Opening it again must not change the total.
 
-1. Wait for the repository Future before using its returned conversations.
-2. Parse unread counts supplied as integers or integer strings; use 0 for missing,
-   invalid, or negative counts. A null preview should become an empty string.
-   Timestamp normalization is already supplied.
+Preserve these behaviors:
 
-3. The search field stays above a list that uses the remaining screen space.
-   The list scrolls without overflowing the screen.
-4. Tapping a conversation marks **only that conversation** read, opens its preview,
-   and updates the header total. Going back shows the updated row.
+- Search names and previews, ignoring case and surrounding spaces; clearing restores rows.
+- Show newest conversations first. The header totals unread messages across the whole
+  inbox, including rows hidden by search.
+- Keep opened conversations read after refresh within the same app session.
+- Keep loading, empty, error, Retry, and Back navigation working. Empty inbox and no
+  search matches may share a message. A missing preview displays `No message preview`.
 
-The unread total counts messages across the whole inbox, including rows hidden by
-search. For example, two conversations have 3 and 2 unread messages: the header
-shows 5. Opening the first changes its count to 0 and the total to 2. Opening it
-again leaves the total at 2. Searching for only the first still leaves the total at 2.
+Example: rows have **3 and 2 unread messages**. Opening the first leaves **0 and 2**,
+with **2 unread** in the header, even when search hides the second row.
 
-Keep the supplied behavior working:
+Keep the supplied disposal and sequential-loading safeguards. Check the normal flow,
+`THREAD_COUNT=0`, and `FAIL_FIRST=true` followed by Retry.
 
-- Search matches contact names or previews, ignoring case and surrounding spaces.
-  Clearing search restores all rows.
-- Newest conversations appear first.
-- Loading, empty inbox, error, and Retry states remain visible when appropriate.
-  The same empty message may be used for an empty inbox and no search matches.
-- Refresh keeps opened conversations read within the current app session.
-- The conversation screen shows the name and latest preview, with a Back action.
+## Q2 — Improve the list
 
-The loading/error UI, sequential refresh requests, and disposal safety are provided.
-Keep those safeguards while fixing async loading. Explain the four areas you repaired.
-
-Manual checks: load the default dataset, scroll, search, open a row, go back,
-clear search, and refresh. Also check `THREAD_COUNT=0` and `FAIL_FIRST=true` with Retry.
-
-## Q2 — Build rows as needed
-
-Run with 500 conversations:
+Run with **500 conversations**:
 
 ```sh
 flutter run -d chrome --dart-define=THREAD_COUNT=500
 ```
 
-Replace the eager list with `ListView.builder` or an equivalent lazy list. Keep the
-bounded layout, navigation, and search behavior from Q1. Also:
+Build rows lazily with `ListView.builder` or equivalent. Keep every conversation
+available through scrolling and search. Each row already shows its own unread count,
+and the controller supplies sorted data and the cached header total.
 
-- Remove the full-list unread calculation repeated inside each row. A row only needs
-  its own unread count; the header already has a cached whole-inbox total.
-- Remove sorting from the widget build method. The controller already sorts on load.
+Preserve Q1 behavior. In `PERFORMANCE.md`, describe this change and compare scrolling
+and search before/after on the same browser/device and build mode. Manual observations
+are enough; reporting no noticeable timing difference is acceptable. Do not invent numbers.
 
-In `PERFORMANCE.md`, briefly explain what the old list created, what the new list
-creates, which repeated calculations you removed, and what you observed while
-scrolling and searching before and after.
-A manual comparison on the same browser/device and build mode is enough. If you
-cannot notice a timing difference, say so and explain the change in row creation.
+## Q3 — Add three tests
 
-DevTools traces, frame-duration calculations, physical-device profiling, isolates,
-pagination, and search indexing are not required. Do not invent measurements.
+Replace the skipped placeholders in `test/exercise_test.dart`. Use a small fake
+`InboxRepository` returning known data through an immediately completed Future.
 
-## Q3 — Add three meaningful tests
+1. **Logic:** case/space-insensitive search filters correctly; clearing restores rows.
+2. **Logic:** with unread counts 3 and 2, opening the first leaves 0 and 2 and total 2.
+   Reopening it leaves the total unchanged.
+3. **Widget:** load two rows, search, verify only the matching row remains, then clear
+   and verify both return. Advance the UI with `pump`/`pumpAndSettle`.
 
-Replace the skipped placeholders and remove their `skip: true` arguments.
-Use a small fake repository returning known conversations. The repository is already
-injected into the controller and app. An immediately completed Future is sufficient;
-you do not need to control overlapping requests or use real-time sleeps.
+Remove `skip: true` and assert public results. Avoid real-time sleeps and network calls.
 
-Required tests:
+## Submit and explain
 
-1. **Logic:** searching ignores case and surrounding spaces, and clearing the query
-   restores the list. Use at least two conversations so filtering is meaningful.
-2. **Logic:** opening one conversation marks only it read and updates the unread total.
-   Use two conversations with different nonzero counts, such as 3 and 2. Check both
-   rows, the total, and that opening the same conversation again leaves the total unchanged.
-3. **Widget:** load an inbox with a fake repository, enter a search query, and check
-   that the matching row appears and the other row disappears. Clear search and
-   check that both return. Use `pump`/`pumpAndSettle` to advance the widget test.
+Submit app changes, three tests, `PERFORMANCE.md` observations, and a brief note about
+unfinished work. Run `flutter analyze` and `flutter test` after completing the fixes.
 
-Tests should assert public behavior and fail when the relevant behavior breaks.
-A fake returning `Future.value(...)` keeps tests fast and repeatable. No network,
-platform plugins, coverage target, or minimum test count beyond these three is required.
+Main files: `lib/main.dart`, `lib/inbox_controller.dart`, and `lib/thread.dart`.
+Use the supplied repository. No new state-management package, backend, sending,
+persistence, profiling traces, or advanced async tests are required.
 
-## Optional discussion — only if time remains
-
-These are bonus topics, not requirements for passing:
-
-- How would you test loading failure and Retry?
-- What happens if a request finishes after the screen is removed?
-- What could you investigate if search became slow with a much larger dataset?
-- How would you test opening a conversation and returning to the inbox?
-
-Do not implement extra features at the expense of the required tasks. Sending,
-message history, authentication, real APIs, persistence, and architecture rewrites
-are outside the exercise.
-
-## Submission
-
-Submit updated code, the three tests, a short `PERFORMANCE.md` observation, and a
-brief note about unfinished work. Run `flutter analyze` and `flutter test`.
-Explain your changes during review. The interviewer will state the AI-assistance
-policy before timing starts. If you get stuck, ask for a hint; partial work is reviewed.
+Ask for a hint if stuck. The interviewer will state the AI policy before timing starts.
+Optional discussion, if time remains: Retry tests, disposal safety, larger-data search,
+and navigation tests.

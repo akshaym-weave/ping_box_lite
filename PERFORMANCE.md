@@ -14,8 +14,6 @@ open a row, and return. Use the same environment and dataset for both versions.
 | Check | Before: eager list | After: lazy list |
 | --- | --- | --- |
 | When are row widgets created? | | |
-| Is a full-list total calculated inside each row? | | |
-| Is sorting repeated in the widget build method? | | |
 | What did you observe while scrolling? | | |
 | What did you observe during search and clearing? | | |
 | Does opening a row still update only its unread count? | | |

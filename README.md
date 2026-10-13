@@ -1,6 +1,6 @@
 # Flutter inbox interview — 3–5 years of experience
 
-A 90-minute coding round: fix four bugs, improve three list inefficiencies, and add three tests.
+A 60-minute coding round: fix four bugs, make the list lazy, and add three tests as a separate task.
 Read [QUESTIONS.md](QUESTIONS.md) for the required behavior and timing.
 The starter intentionally fails analysis until Q1. Async loading, parsing, layout,
 and selected-conversation read behavior need fixes. The skipped tests are placeholders, not passing evidence.

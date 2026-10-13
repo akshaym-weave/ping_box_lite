@@ -46,8 +46,7 @@ class _InboxScreenState extends State<InboxScreen> {
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: controller,
         builder: (context, _) {
-          final threads = controller.visible.toList()
-            ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          final threads = controller.visible;
           return Scaffold(
             appBar: AppBar(
                 title: Text('Inbox · ${controller.unreadTotal} unread'),
@@ -102,8 +101,8 @@ class _InboxScreenState extends State<InboxScreen> {
                                         subtitle: Text(thread.preview,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis),
-                                        trailing: Text(
-                                            '${thread.unread} / ${controller.visible.fold<int>(0, (sum, t) => sum + t.unread)}'),
+                                        trailing:
+                                            Text('${thread.unread} unread'),
                                         onTap: () {
                                           controller.markRead(thread.id);
                                           Navigator.of(context).push(
